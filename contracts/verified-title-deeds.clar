@@ -43,7 +43,8 @@
 (define-public (set-legal-verifier (new-verifier principal))
     (begin
         (asserts! (is-eq tx-sender CONTRACT_OWNER) (err ERR_OWNER_ONLY))
-        (ok (var-set legal-verifier new-verifier))
+        (var-set legal-verifier new-verifier)
+        (ok true)
     )
 )
 
@@ -79,10 +80,11 @@
 ;; @returns (response bool)
 (define-public (update-legal-description (token-id uint) (new-desc (string-utf8 256)))
     (begin
-        (asserts! (is-eq tx-sender (unwrap! (nft-get-owner? title-deed token-id) (err ERR_TOKEN_NOT_FOUND)))) (err ERR_NOT_AUTHORIZED))
+        (asserts! (is-eq tx-sender (unwrap! (nft-get-owner? title-deed token-id) (err ERR_TOKEN_NOT_FOUND))) (err ERR_NOT_AUTHORIZED))
         (let ((metadata (unwrap! (map-get? property-metadata token-id) (err ERR_TOKEN_NOT_FOUND))))
             (asserts! (not (get metadata-frozen metadata)) (err ERR_METADATA_FROZEN))
-            (ok (map-set property-metadata token-id (merge metadata { legal-description: new-desc })))
+            (map-set property-metadata token-id (merge metadata { legal-description: new-desc }))
+            (ok true)
         )
     )
 )
@@ -92,10 +94,11 @@
 ;; @returns (response bool)
 (define-public (freeze-metadata (token-id uint))
     (begin
-        (asserts! (is-eq tx-sender (unwrap! (nft-get-owner? title-deed token-id) (err ERR_TOKEN_NOT_FOUND)))) (err ERR_NOT_AUTHORIZED))
+        (asserts! (is-eq tx-sender (unwrap! (nft-get-owner? title-deed token-id) (err ERR_TOKEN_NOT_FOUND))) (err ERR_NOT_AUTHORIZED))
         (let ((metadata (unwrap! (map-get? property-metadata token-id) (err ERR_TOKEN_NOT_FOUND))))
             (asserts! (not (get metadata-frozen metadata)) (err ERR_METADATA_FROZEN))
-            (ok (map-set property-metadata token-id (merge metadata { metadata-frozen: true })))
+            (map-set property-metadata token-id (merge metadata { metadata-frozen: true }))
+            (ok true)
         )
     )
 )
@@ -159,14 +162,14 @@
 
 ;; @desc Gets the owner of a specific title deed NFT.
 ;; @param token-id: The ID of the token.
-;; @returns (response principal) The owner's principal.
+;; @returns (response (optional principal)) The owner's principal.
 (define-read-only (get-owner (token-id uint))
     (ok (nft-get-owner? title-deed token-id))
 )
 
 ;; @desc Gets the metadata for a specific property.
 ;; @param token-id: The ID of the token.
-;; @returns (response (tuple ...)) The property metadata.
+;; @returns (optional (tuple ...)) The property metadata.
 (define-read-only (get-property-metadata (token-id uint))
     (map-get? property-metadata token-id)
 )
@@ -185,7 +188,7 @@
 
 ;; @desc Checks the verification status of a pending transfer.
 ;; @param token-id: The ID of the token.
-;; @returns (response (tuple ...)) The verification status.
+;; @returns (optional (tuple ...)) The verification status.
 (define-read-only (get-transfer-verification-status (token-id uint))
     (map-get? transfer-verifications token-id)
 )
