@@ -43,6 +43,7 @@
 (define-public (set-legal-verifier (new-verifier principal))
     (begin
         (asserts! (is-eq tx-sender CONTRACT_OWNER) (err ERR_OWNER_ONLY))
+        (asserts! (not (is-eq new-verifier 'SP000000000000000000002Q6VF78)) (err ERR_INVALID_RECIPIENT))
         (var-set legal-verifier new-verifier)
         (ok true)
     )
@@ -58,6 +59,9 @@
     (begin
         (asserts! (is-eq tx-sender CONTRACT_OWNER) (err ERR_OWNER_ONLY))
         (asserts! (> (len property-id) u0) (err ERR_INVALID_PROPERTY_ID))
+        (asserts! (not (is-eq recipient 'SP000000000000000000002Q6VF78)) (err ERR_INVALID_RECIPIENT))
+        (asserts! (> (len legal-desc) u0) (err ERR_INVALID_PROPERTY_ID))
+        (asserts! (> (len juris) u0) (err ERR_INVALID_PROPERTY_ID))
 
         (let ((token-id (+ (var-get last-token-id) u1)))
             (try! (nft-mint? title-deed token-id recipient))
@@ -113,6 +117,7 @@
     (begin
         (asserts! (is-eq tx-sender (var-get legal-verifier)) (err ERR_VERIFIER_ONLY))
         (asserts! (is-some (map-get? property-metadata token-id)) (err ERR_TOKEN_NOT_FOUND))
+        (asserts! (not (is-eq new-owner 'SP000000000000000000002Q6VF78)) (err ERR_INVALID_RECIPIENT))
         (map-set transfer-verifications token-id { verified: true, new-owner: new-owner })
         (print { type: "transfer-approval", token-id: token-id, approved-for: new-owner })
         (ok true)
@@ -152,6 +157,9 @@
 (define-public (emergency-transfer (token-id uint) (current-owner principal) (new-owner principal))
     (begin
         (asserts! (is-eq tx-sender CONTRACT_OWNER) (err ERR_OWNER_ONLY))
+        (asserts! (is-some (nft-get-owner? title-deed token-id)) (err ERR_TOKEN_NOT_FOUND))
+        (asserts! (not (is-eq current-owner 'SP000000000000000000002Q6VF78)) (err ERR_INVALID_RECIPIENT))
+        (asserts! (not (is-eq new-owner 'SP000000000000000000002Q6VF78)) (err ERR_INVALID_RECIPIENT))
         (try! (nft-transfer? title-deed token-id current-owner new-owner))
         (print { type: "emergency-transfer", token-id: token-id, from: current-owner, to: new-owner })
         (ok true)
